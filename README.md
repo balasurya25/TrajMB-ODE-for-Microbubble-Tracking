@@ -25,4 +25,6 @@ To train the model, the `torchdiffeq` module will be required. Do
 ```python
 pip install torchdiffeq
 ```
+Subsequently, the `globalTrajODE` Jupyter notebook can be used for training and validating the simulated trajectories.
+
 The model can be evaluated on *in-vivo* and *in-vitro* data using the `evalTrajODE` Jupyter notebook. 
