@@ -64,6 +64,41 @@ def scenario_3(physical_width,physical_height):
   state_space= np.array([x,z,vx,vz,v,phi,w,a,label]).reshape((1,9)) #reshapes the entries into an np array of size 1x7
   return state_space
 
+def scenario_crossing_pair(physical_width, physical_height):
+    # Crossing point near center with small random offset
+    cx = physical_width * 0.5 + np.random.uniform(-1.0, 1.0)
+    cz = physical_height * 0.5 + np.random.uniform(-1.0, 1.0)
+
+    # Two initial angles that cross (~90 degrees apart)
+    phi1 = np.random.uniform(0, np.pi)
+    phi2 = phi1 + np.pi/2 + np.random.uniform(-0.2, 0.2)
+
+    # Velocities similar to S2 range
+    v1 = np.random.uniform(10.0, 15.0)
+    v2 = np.random.uniform(10.0, 15.0)
+
+    # Angular velocities
+    w1 = np.random.uniform(-6, 6) * np.pi
+    w2 = np.random.uniform(-6, 6) * np.pi
+    
+    # Avoid near-zero w (straight line edge case)
+    w1 = w1 if abs(w1) > 0.1 else 0.1
+    w2 = w2 if abs(w2) > 0.1 else 0.1
+
+    a1 = np.random.uniform(0.05, 0.2)
+    a2 = np.random.uniform(0.05, 0.2)
+
+    # State: [x, z, vx, vz, v, phi, w, a, label]
+    vx1 = v1 * np.cos(phi1)
+    vz1 = v1 * np.sin(phi1)
+    vx2 = v2 * np.cos(phi2)
+    vz2 = v2 * np.sin(phi2)
+
+    s1 = np.array([cx, cz, vx1, vz1, v1, phi1, w1, a1, 1]).reshape(1, 9)
+    s2 = np.array([cx, cz, vx2, vz2, v2, phi2, w2, a2, 1]).reshape(1, 9)
+
+    return s1, s2
+
 def iterate_nonlinear_mm(state_space,delta_t): #delta_t is the time step
   x= state_space[:,0]
   z= state_space[:,1]
@@ -114,6 +149,40 @@ def linear_iterate(state_space, delta_t):
     state_space = np.array([x.item(), z.item(), vx.item(), vz.item(), v.item(), phi.item(), w.item(), a.item(), label]).reshape((1, 9))
     return state_space
 
+def generate_crossing_tracks(physical_width, physical_height, 
+                              delta_t, nums, t_points,scenario):
+    """
+     Generate crossing track pairs.
+    
+    Args:
+        physical_width:  domain width in mm
+        physical_height: domain height in mm
+        delta_t:         time step in seconds
+        nums:            total number of tracks (must be even)
+        t_points:        number of time points per track
+    
+    Returns:
+        tracks: (nums, t_points, 2) array of [x, z] positions
+    """
+    assert nums % 2 == 0, "nums must be even for crossing pairs"
+    
+    tracks = np.zeros((nums, t_points, 2))
+    idx = 0
+
+    while idx < nums:
+        s1, s2 = scenario_crossing_pair(physical_width, physical_height)
+
+        for t in range(t_points):
+            if t > 0:
+                s1 = iterate_nonlinear_mm(s1, delta_t)
+                s2 = iterate_nonlinear_mm(s2, delta_t)
+
+            tracks[idx,   t, :] = s1[:, :2]  # [x, z]
+            tracks[idx+1, t, :] = s2[:, :2]  # [x, z]
+
+        idx += 2
+
+    return tracks
 
 def generate_tracks(physical_width, physical_height, delta_t, nums, t_points, scenario):
   tracks= np.zeros((nums,t_points,2))
