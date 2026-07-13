@@ -27,4 +27,4 @@ pip install torchdiffeq
 ```
 Subsequently, the `globalTrajODE` Jupyter notebook can be used for training and validating the simulated trajectories.
 
-The model can be evaluated on *in-vivo* and *in-vitro* data using the `evalTrajODE` Jupyter notebook. 
+The trained model weights are contained in the file labeled `model_seq2vec_best.pth' and the fitted scaler is provided in `standard_scaler_adaptive_global`. The trained model can be evaluated on *in-vivo* and *in-vitro* data using the `evalTrajODE` Jupyter notebook. 
